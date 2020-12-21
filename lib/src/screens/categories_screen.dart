@@ -30,7 +30,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                _category.name = _categoryNameController.text;
                _category.description = _categoryDescriptionController.text;
 
-               _categoryServices.saveCategory(_category);
+               var result = _categoryServices.saveCategory(_category);
+               print(result);
               },
               child: Text('Save', style: TextStyle(fontSize: 16),)
           ),
