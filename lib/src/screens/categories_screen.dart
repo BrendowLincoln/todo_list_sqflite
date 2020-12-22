@@ -11,37 +11,53 @@ class CategoriesScreen extends StatefulWidget {
 
 class _CategoriesScreenState extends State<CategoriesScreen> {
 
-    var _categoryNameController = TextEditingController();
-    var _categoryDescriptionController = TextEditingController();
+  var _categoryNameController = TextEditingController();
+  var _categoryDescriptionController = TextEditingController();
 
-    var _category = Category();
-    var _categoryServices = CategoryService();
-
-
-    List<Category> _categoryList = List<Category>();
+  var _category = Category();
+  var _categoryServices = CategoryService();
 
 
-    @override
+  List<Category> _categoryList = List<Category>();
+
+  var category;
+
+  var _editCategoryNameController = TextEditingController();
+  var _editCategoryDescriptionController = TextEditingController();
+
+
+  @override
   void initState() {
     super.initState();
     getAllCategories();
   }
 
   getAllCategories() async {
-      _categoryList = List<Category>();
-      var categories = await _categoryServices.readCategories();
-      categories.forEach((category){
-        setState(() {
-          var categoryModel = Category();
-          categoryModel.name = category['name'];
-          categoryModel.description = category['description'];
-          categoryModel.id = category['id'];
-          _categoryList.add(categoryModel);
-        });
+    _categoryList = List<Category>();
+    var categories = await _categoryServices.readCategories();
+    categories.forEach((category) {
+      setState(() {
+        var categoryModel = Category();
+        categoryModel.name = category['name'];
+        categoryModel.description = category['description'];
+        categoryModel.id = category['id'];
+        _categoryList.add(categoryModel);
       });
-    }
+    });
+  }
 
-  _showFormDialog(BuildContext context) {
+  _editCategory(BuildContext context, categoryId) async {
+
+    category = await _categoryServices.readCategoryById(categoryId);
+    setState(() {
+      _editCategoryNameController.text = category[0]['name']??'No Name';
+      _editCategoryDescriptionController.text =
+          category[0]['description'] ?? 'No Description';
+    });
+    _editFormDialog(context);
+  }
+
+   _showFormDialog(BuildContext context) {
     return showDialog(context: context, barrierDismissible: true, builder: (param){
       return AlertDialog(
         actions: [
@@ -88,6 +104,49 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   }
 
 
+    _editFormDialog(BuildContext context) {
+      return showDialog(context: context, barrierDismissible: true, builder: (param){
+        return AlertDialog(
+          actions: [
+            FlatButton(
+                onPressed: (){},
+                child: Text('Cancel', style: TextStyle(fontSize: 16))
+            ),
+            FlatButton(
+                onPressed: () async {
+                  _category.name = _categoryNameController.text;
+                  _category.description = _categoryDescriptionController.text;
+
+                },
+                child: Text('Update', style: TextStyle(fontSize: 16),)
+            ),
+          ],
+          title: Text('Edit Categories Form'),
+          content: SingleChildScrollView(
+            child: Column(
+              children: <Widget>[
+                TextField(
+                  controller: _editCategoryNameController,
+                  decoration: InputDecoration(
+                      hintText: 'Write a category',
+                      labelText: 'Category'
+                  ),
+                ),
+                TextField(
+                  controller: _editCategoryDescriptionController,
+                  decoration: InputDecoration(
+                      hintText: 'Write a description',
+                      labelText: 'Description'
+                  ),
+                )
+              ],
+            ),
+          ),
+        );
+      });
+    }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -109,7 +168,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               child: Card(
                 elevation: 8.0,
                 child: ListTile(
-                  leading: IconButton(icon: Icon(Icons.edit), onPressed: () {},),
+                  leading: IconButton(icon: Icon(Icons.edit), onPressed: () {
+                    _editCategory(context, _categoryList[index].id);
+                  },),
                   title: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
