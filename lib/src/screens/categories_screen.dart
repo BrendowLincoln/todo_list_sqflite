@@ -17,6 +17,30 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     var _category = Category();
     var _categoryServices = CategoryService();
 
+
+    List<Category> _categoryList = List<Category>();
+
+
+    @override
+  void initState() {
+    super.initState();
+    getAllCategories();
+  }
+
+  getAllCategories() async {
+      _categoryList = List<Category>();
+      var categories = await _categoryServices.readCategories();
+      categories.forEach((category){
+        setState(() {
+          var categoryModel = Category();
+          categoryModel.name = category['name'];
+          categoryModel.description = category['description'];
+          categoryModel.id = category['id'];
+          _categoryList.add(categoryModel);
+        });
+      });
+    }
+
   _showFormDialog(BuildContext context) {
     return showDialog(context: context, barrierDismissible: true, builder: (param){
       return AlertDialog(
@@ -26,12 +50,14 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               child: Text('Cancel', style: TextStyle(fontSize: 16))
           ),
           FlatButton(
-              onPressed: (){
+              onPressed: () async {
+
                _category.name = _categoryNameController.text;
                _category.description = _categoryDescriptionController.text;
 
-               var result = _categoryServices.saveCategory(_category);
+               var result = await _categoryServices.saveCategory(_category);
                print(result);
+
               },
               child: Text('Save', style: TextStyle(fontSize: 16),)
           ),
@@ -75,12 +101,27 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       ),
       drawer: DrawerNavigator(),
       body: Center(
-        child: Text(
-          'Welcome to the Categorie Screen ',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w400,
-          ),
+        child: ListView.builder(
+          itemCount: _categoryList.length,
+          itemBuilder: (context, index) {
+            return Padding(
+              padding: const EdgeInsets.only(top: 8.0, left: 16.0, right: 16.0),
+              child: Card(
+                elevation: 8.0,
+                child: ListTile(
+                  leading: IconButton(icon: Icon(Icons.edit), onPressed: () {},),
+                  title: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Text(_categoryList[index].name),
+                      IconButton(icon: Icon(Icons.delete, color: Colors.red), onPressed: (){})
+                    ],
+                  ),
+                  subtitle: Text(_categoryList[index].description),
+                ),
+              ),
+            );
+          },
         ),
       ),
       floatingActionButton: FloatingActionButton(
