@@ -60,7 +60,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     _editFormDialog(context);
   }
 
-   _showFormDialog(BuildContext context) {
+  _showFormDialog(BuildContext context) {
     return showDialog(context: context, barrierDismissible: true, builder: (param){
       return AlertDialog(
         actions: [
@@ -110,8 +110,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     });
   }
 
-
-    _editFormDialog(BuildContext context) {
+  _editFormDialog(BuildContext context) {
       return showDialog(context: context, barrierDismissible: true, builder: (param){
         return AlertDialog(
           actions: [
@@ -163,6 +162,36 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       });
     }
 
+  _deleteFormDialog(BuildContext context, categoryId) {
+    return showDialog(context: context, barrierDismissible: true, builder: (param){
+      return AlertDialog(
+        actions: [
+          FlatButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel', style: TextStyle(fontSize: 16))
+          ),
+          FlatButton(
+              onPressed: () async {
+
+                var result = await _categoryServices.deleteCategory(categoryId);
+                if(result > 0) {
+                  print(result);
+                  Navigator.pop(context);
+                  getAllCategories();
+                  _showSuccessSnackBar(Text('Deleted'));
+                }
+
+
+              },
+              child: Text('Delete', style: TextStyle(fontSize: 16),)
+          ),
+        ],
+        title: Text('Are you sure you want to delete this?'),
+      );
+    });
+  }
+
+
     _showSuccessSnackBar(message) {
       var _snackBar = SnackBar(content: message, backgroundColor: Theme.of(context).primaryColor,);
       _globalKey.currentState.showSnackBar(_snackBar);
@@ -197,7 +226,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
                       Text(_categoryList[index].name),
-                      IconButton(icon: Icon(Icons.delete, color: Colors.red), onPressed: (){})
+                      IconButton(icon: Icon(Icons.delete, color: Colors.red), onPressed: (){
+                        _deleteFormDialog(context, _categoryList[index].id);
+                      })
                     ],
                   ),
                 ),
