@@ -22,4 +22,9 @@ class CategoryService {
   readCategoryById(categoryId) async {
     return await _repository.readDataById('categories', categoryId);
   }
+
+  // Update category by id
+  updateCategory(Category category) async {
+    return await _repository.updateData('categories', category.toMap());
+  }
 }

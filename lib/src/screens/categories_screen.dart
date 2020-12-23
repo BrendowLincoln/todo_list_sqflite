@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:todo_list_sqflite/src/helpers/drawer_navigator.dart';
 import 'package:todo_list_sqflite/src/models/category.dart';
@@ -25,12 +27,13 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   var _editCategoryNameController = TextEditingController();
   var _editCategoryDescriptionController = TextEditingController();
 
-
   @override
   void initState() {
     super.initState();
     getAllCategories();
   }
+
+  final GlobalKey<ScaffoldState> _globalKey = GlobalKey<ScaffoldState>();
 
   getAllCategories() async {
     _categoryList = List<Category>();
@@ -50,7 +53,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
     category = await _categoryServices.readCategoryById(categoryId);
     setState(() {
-      _editCategoryNameController.text = category[0]['name']??'No Name';
+      _editCategoryNameController.text = category[0]['name'] ?? 'No Name';
       _editCategoryDescriptionController.text =
           category[0]['description'] ?? 'No Description';
     });
@@ -72,7 +75,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                _category.description = _categoryDescriptionController.text;
 
                var result = await _categoryServices.saveCategory(_category);
-               print(result);
+               if(result > 0) {
+                 Navigator.pop(context);
+                 getAllCategories();
+                 _showSuccessSnackBar(Text('Category added'));
+               }
 
               },
               child: Text('Save', style: TextStyle(fontSize: 16),)
@@ -109,13 +116,23 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         return AlertDialog(
           actions: [
             FlatButton(
-                onPressed: (){},
+                onPressed: () => Navigator.pop(context),
                 child: Text('Cancel', style: TextStyle(fontSize: 16))
             ),
             FlatButton(
                 onPressed: () async {
-                  _category.name = _categoryNameController.text;
-                  _category.description = _categoryDescriptionController.text;
+                  _category.id = category[0]['id'];
+                  _category.name = _editCategoryNameController.text;
+                  _category.description = _editCategoryDescriptionController.text;
+
+                  var result = await _categoryServices.updateCategory(_category);
+                  if(result > 0) {
+                    print(result);
+                    Navigator.pop(context);
+                    getAllCategories();
+                    _showSuccessSnackBar(Text('Updated'));
+                  }
+                  
 
                 },
                 child: Text('Update', style: TextStyle(fontSize: 16),)
@@ -146,10 +163,15 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       });
     }
 
+    _showSuccessSnackBar(message) {
+      var _snackBar = SnackBar(content: message, backgroundColor: Theme.of(context).primaryColor,);
+      _globalKey.currentState.showSnackBar(_snackBar);
+    }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _globalKey,
       appBar: AppBar(
         leading: IconButton(
           onPressed: () => Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => HomeScreen())),
@@ -178,7 +200,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       IconButton(icon: Icon(Icons.delete, color: Colors.red), onPressed: (){})
                     ],
                   ),
-                  subtitle: Text(_categoryList[index].description),
                 ),
               ),
             );
