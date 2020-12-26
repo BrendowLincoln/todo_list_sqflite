@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:todo_list_sqflite/src/helpers/drawer_navigator.dart';
+import 'package:todo_list_sqflite/src/services/category_services.dart';
 
 class TodoScreen extends StatefulWidget {
   @override
@@ -9,10 +10,34 @@ class TodoScreen extends StatefulWidget {
 class _TodoScreenState extends State<TodoScreen> {
 
   var todoTitleController = TextEditingController();
+
   var todoDescriptionController = TextEditingController();
+
   var todoDateController = TextEditingController();
 
   var _selectedValue;
+
+  var _categories = List<DropdownMenuItem>();
+
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCategories();
+  }
+
+  _loadCategories() async {
+    var _categoryService = CategoryService();
+    var categories = await _categoryService.readCategories();
+    categories.forEach((category){
+      setState(() {
+        _categories.add(DropdownMenuItem(
+          child: Text(category['name']),
+          value: category['name'],
+        ));
+      });
+    });
+}
 
   @override
   Widget build(BuildContext context) {
@@ -50,13 +75,13 @@ class _TodoScreenState extends State<TodoScreen> {
               ),
             ),
            DropdownButtonFormField(
-             items: null,
+             value: _selectedValue,
+             items: _categories,
              onChanged: (value) {
                setState(() {
                  _selectedValue = value;
                });
              },
-             value: _selectedValue,
              hint: Text('Category'),
            ),
             SizedBox(
